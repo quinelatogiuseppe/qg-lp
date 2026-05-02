@@ -42,7 +42,7 @@ export const Footer = () => (
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           <span>© {new Date().getFullYear()} Quinelato Giuseppe</span>
           <span className="hidden h-1 w-1 rounded-full bg-gold/60 sm:inline-block" />
-          <span>Marketing of Excellence</span>
+          <span>Marketing Digital</span>
           <span className="hidden h-1 w-1 rounded-full bg-gold/60 sm:inline-block" />
           <span>Todos os direitos reservados</span>
         </div>

@@ -1,5 +1,5 @@
 // Centralized site config — replace WHATSAPP_NUMBER with the real one (digits only, with country code).
-export const WHATSAPP_NUMBER = "5500000000000";
+export const WHATSAPP_NUMBER = "5527996271916";
 
 export function waLink(message: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
