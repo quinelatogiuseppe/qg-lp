@@ -14,6 +14,8 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
         display: ['"Playfair Display"', "ui-serif", "Georgia", "serif"],
+        serif: ['"Cormorant Garamond"', "ui-serif", "Georgia", "serif"],
+        institutional: ['Inter', "ui-sans-serif", "system-ui", "sans-serif"],
       },
       letterSpacing: {
         tightest: "-0.04em",

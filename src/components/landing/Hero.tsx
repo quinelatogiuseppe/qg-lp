@@ -15,7 +15,7 @@ export const Hero = () => {
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.02] px-4 py-1.5 backdrop-blur-md">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Agência · High-Ticket · Marketing of Excellence
+              Agência · High-Ticket · Marketing Digital
             </span>
           </div>
 
