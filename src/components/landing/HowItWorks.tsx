@@ -40,9 +40,9 @@ export const HowItWorks = () => (
           Método R.E.A.L
         </Reveal>
         <Reveal as="h2" delay={100} className="font-sans text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-tight tracking-tightest">
-          O método do QG para{" "}
+          Um processo desenhado para{" "}
           <span className="font-display italic font-medium text-gradient-gold">
-            transformar perfis em ativos de aquisição
+            escalar com base
           </span>
           .
         </Reveal>
