@@ -1,47 +1,46 @@
 ## Escopo
 
-Três alterações pontuais na LP. Nada mais será tocado.
+Ajustar **apenas** a seção `HowItWorks` (`src/components/landing/HowItWorks.tsx`) para apresentar o **Método R.E.A.L** — o método oficial do QG conforme PUV enviada. Nenhuma outra seção da LP será tocada.
 
-### 1. Logo oficial + tipografia conforme manual de marca
+## Mudanças em `src/components/landing/HowItWorks.tsx`
 
-**Manual de marca (resumo do PDF enviado):**
-- Monograma "QG" dourado entrelaçado é o selo da marca — deve ser usado com reverência, sem efeitos.
-- Tipografia institucional: **Garamond Premier Pro** para títulos/destaques (substituto web próximo: **Cormorant Garamond**, serifa clássica de mesma família visual) e **Helvetica Neue** para subtítulos/apoio (substituto web: **Inter**, já neutra geométrica equivalente).
-- Fundo escuro é a aplicação preferencial — nossa LP já está nessa diretriz.
+### 1. Eyebrow e título
 
-**Ações:**
-- Copiar `user-uploads://Logo-quinelato-giuseppe-2026.png` para `src/assets/logo-qg.png`.
-- Reescrever `src/components/landing/Logo.tsx`:
-  - Substituir o monograma CSS atual (círculo com "QG" em Playfair) pelo PNG oficial dourado entrelaçado, respeitando a margem de respiro do manual.
-  - Trocar a wordmark "Quinelato·Giuseppe" do tratamento Playfair italic atual para **Cormorant Garamond** (peso 500, tracking levemente aberto), refletindo o Garamond Premier Pro institucional. O ponto dourado entre as palavras é removido para honrar o manual ("nunca distorça/aplicar efeitos").
-  - Subtítulo passa a "MARKETING DIGITAL" em Inter, uppercase, tracking 0.32em (mantém o ritmo editorial existente em Helvetica Neue).
-- Adicionar **Cormorant Garamond** ao `<link>` do Google Fonts em `index.html` (Inter já vem incluso via Plus Jakarta — adicionaremos Inter também para o subtítulo institucional).
-- Estender `tailwind.config.ts` com `fontFamily.serif: ['"Cormorant Garamond"', 'serif']` e `fontFamily.institutional: ['Inter', 'sans-serif']` para uso exclusivo da wordmark — sem mexer no resto da tipografia da LP.
+- Eyebrow: `O método` → **`Método R.E.A.L`**
+- Título mantém o tom editorial atual, ajustado para introduzir o acrônimo:
+  > "O método do QG para **transformar perfis em ativos de aquisição**."
+  (com "transformar perfis em ativos de aquisição" em Playfair italic dourado, mantendo o padrão visual existente)
 
-> Observação: a diretriz pediu para alterar **somente** a logo e sua tipografia. Os demais títulos da LP (Playfair italic dourado) permanecem inalterados.
+### 2. Os 4 passos (substituir conteúdo atual)
 
-### 2. Substituir "Marketing of Excellence" → "MARKETING DIGITAL"
+| # | Letra | Título | Texto | Ícone (lucide) |
+|---|-------|--------|-------|----------------|
+| 01 | **R** | Raiz | Diagnóstico profundo do perfil e identificação dos fatores que impedem o negócio de aparecer no Google. | `Search` |
+| 02 | **E** | Estrutura | Otimização completa do Google Business Profile para gerar confiança, relevância e profissionalismo. | `LayoutGrid` |
+| 03 | **A** | Autoridade | Construção de reputação com avaliações, conteúdo e sinais locais que comprovam excelência. | `Award` |
+| 04 | **L** | Lapidação | Ajustes contínuos para subir no ranking e sustentar crescimento previsível mês a mês. | `Gem` |
 
-Três ocorrências encontradas, todas serão atualizadas para `MARKETING DIGITAL`:
-- `src/components/landing/Logo.tsx` linha 27 (subtítulo da wordmark)
-- `src/components/landing/Footer.tsx` linha 45 (linha inferior do rodapé)
-- `src/components/landing/Hero.tsx` linha 18 (eyebrow do hero: "Agência · High-Ticket · MARKETING DIGITAL")
+### 3. Tratamento visual do badge numérico
 
-### 3. WhatsApp oficial
+Hoje o badge mostra apenas `01..04` em Playfair dourado. Para fortalecer o acrônimo R.E.A.L sem quebrar o ritmo visual:
 
-- Atualizar `WHATSAPP_NUMBER` em `src/lib/site.ts` de `5500000000000` para **`5527996271916`** (55 = Brasil, 27 = ES, 996271916).
-- Todos os CTAs (Header, Hero, Services, Footer, StickyMobileCTA) já consomem essa constante — propagação automática.
+- Letra grande (R / E / A / L) em **Playfair italic dourado**, no centro do círculo.
+- Numeração `01..04` movida para um micro-rótulo acima da letra (Inter, uppercase, tracking 0.32em, `text-muted-foreground`).
+- Ícone permanece abaixo, mantendo a hierarquia atual.
+
+### 4. Reforço sutil do acrônimo (microcopy)
+
+Logo abaixo do título, adicionar uma linha de apoio discreta:
+> `R.E.A.L — Raiz · Estrutura · Autoridade · Lapidação`
+
+Estilo: Inter, uppercase, tracking 0.32em, cor `text-muted-foreground`, separador `·` em `text-gold/60`. Aparece centralizada entre o título e a grade de passos.
 
 ## Arquivos modificados
 
 ```text
-src/lib/site.ts                       (1 linha — número)
-src/components/landing/Logo.tsx       (reescrita: PNG + tipografia + texto)
-src/components/landing/Footer.tsx     (1 linha — texto)
-src/components/landing/Hero.tsx       (1 linha — texto)
-index.html                            (link Google Fonts: + Cormorant Garamond + Inter)
-tailwind.config.ts                    (+ fontFamily.serif e .institutional)
-src/assets/logo-qg.png                (novo — copiado do upload)
+src/components/landing/HowItWorks.tsx   (única alteração)
 ```
 
-Nenhuma outra parte da LP — seções, animações, cores, copy, espaçamentos — será alterada.
+Imports atualizados de `lucide-react`: trocar `Compass, Rocket, Compass, LineChart` pelo conjunto novo (`Search, LayoutGrid, Award, Gem`).
+
+Nenhum token de design, animação, copy de outras seções, cor ou espaçamento global será modificado.

@@ -1,30 +1,34 @@
 import { Reveal } from "./Reveal";
-import { Compass, LayoutGrid, LineChart, Rocket } from "lucide-react";
+import { Search, LayoutGrid, Award, Gem } from "lucide-react";
 
 const STEPS = [
   {
     n: "01",
-    icon: Compass,
-    title: "Diagnóstico",
-    text: "Reunião estratégica via Google Meet para entender sua operação, ticket e maturidade digital.",
+    letter: "R",
+    icon: Search,
+    title: "Raiz",
+    text: "Diagnóstico profundo do perfil e identificação dos fatores que impedem o negócio de aparecer no Google.",
   },
   {
     n: "02",
+    letter: "E",
     icon: LayoutGrid,
-    title: "Estruturação",
-    text: "Construímos a base: ficha do Google Meu Negócio, autoridade local e gatilhos de confiança.",
+    title: "Estrutura",
+    text: "Otimização completa do Google Business Profile para gerar confiança, relevância e profissionalismo.",
   },
   {
     n: "03",
-    icon: LineChart,
-    title: "Otimização",
-    text: "Ajustes mensais contínuos guiados por dados — relevância, conteúdo e posicionamento.",
+    letter: "A",
+    icon: Award,
+    title: "Autoridade",
+    text: "Construção de reputação com avaliações, conteúdo e sinais locais que comprovam excelência.",
   },
   {
     n: "04",
-    icon: Rocket,
-    title: "Escala",
-    text: "Com a base sólida, ativamos o tráfego pago personalizado para multiplicar resultado.",
+    letter: "L",
+    icon: Gem,
+    title: "Lapidação",
+    text: "Ajustes contínuos para subir no ranking e sustentar crescimento previsível mês a mês.",
   },
 ];
 
@@ -33,11 +37,19 @@ export const HowItWorks = () => (
     <div className="container">
       <div className="mx-auto max-w-2xl text-center">
         <Reveal as="div" className="mb-5 text-[11px] uppercase tracking-[0.32em] text-gold">
-          O método
+          Método R.E.A.L
         </Reveal>
         <Reveal as="h2" delay={100} className="font-sans text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-tight tracking-tightest">
-          Um processo desenhado para{" "}
-          <span className="font-display italic font-medium text-gradient-gold">escalar com base</span>.
+          O método do QG para{" "}
+          <span className="font-display italic font-medium text-gradient-gold">
+            transformar perfis em ativos de aquisição
+          </span>
+          .
+        </Reveal>
+        <Reveal as="div" delay={180} className="mt-6 text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
+          Raiz <span className="text-gold/60">·</span> Estrutura{" "}
+          <span className="text-gold/60">·</span> Autoridade{" "}
+          <span className="text-gold/60">·</span> Lapidação
         </Reveal>
       </div>
 
@@ -56,12 +68,17 @@ export const HowItWorks = () => (
           {STEPS.map((step, i) => (
             <Reveal key={step.n} delay={i * 120} className="relative">
               <div className="relative flex flex-col items-start">
-                {/* Number badge */}
+                {/* Letter badge */}
                 <div className="relative z-10 mb-6 flex h-[6.5rem] w-[6.5rem] items-center justify-center">
                   <div className="absolute inset-0 rounded-full bg-background" />
                   <div className="absolute inset-0 rounded-full border border-gold/40" />
                   <div className="relative flex h-full w-full flex-col items-center justify-center">
-                    <span className="font-display italic text-3xl text-gold">{step.n}</span>
+                    <span className="text-[9px] uppercase tracking-[0.32em] text-muted-foreground">
+                      {step.n}
+                    </span>
+                    <span className="font-display italic text-4xl leading-none text-gold">
+                      {step.letter}
+                    </span>
                     <step.icon className="mt-1 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </div>
                 </div>
