@@ -5,7 +5,7 @@ import { Logo } from "./Logo";
 import { waLink, WA_MESSAGES } from "@/lib/site";
 
 export const Footer = () => (
-  <footer className="relative overflow-hidden pb-12 pt-32 sm:pt-40">
+  <footer className="relative overflow-hidden pb-32 pt-24 sm:pb-12 sm:pt-40">
     {/* CTA aurora */}
     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[80%]">
       <div

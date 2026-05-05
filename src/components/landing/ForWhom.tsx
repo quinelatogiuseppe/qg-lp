@@ -16,7 +16,7 @@ const NOT_FOR = [
 ];
 
 export const ForWhom = () => (
-  <section className="relative py-28 sm:py-36">
+  <section id="para-quem" className="relative py-28 sm:py-36">
     <div className="container">
       <div className="mx-auto max-w-2xl text-center">
         <Reveal as="div" className="mb-5 text-[11px] uppercase tracking-[0.32em] text-gold">
