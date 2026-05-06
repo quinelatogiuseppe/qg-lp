@@ -15,6 +15,22 @@ const QA = [
     q: "Qualquer empresa pode rodar tráfego pago?",
     a: "Não. Avaliamos sua presença digital antes. Se a empresa não tiver um posicionamento mínimo, o tráfego pode gerar o efeito reverso.",
   },
+  {
+    q: "Quanto tempo leva para ver os primeiros resultados?",
+    a: "Os primeiros sinais — aumento de visualizações, ligações e pedidos de rota no Google — costumam aparecer entre 60 e 90 dias. Resultados consistentes de ranking e autoridade exigem o ciclo completo de 6 meses do Método R.E.A.L.",
+  },
+  {
+    q: "A Quinelato Giuseppe atende qualquer tipo de negócio?",
+    a: "Trabalhamos com empresas que têm ticket médio compatível com investimento em presença digital de longo prazo e que estejam dispostas a seguir o método. Negócios sem operação estruturada ou que buscam resultado imediato não são perfil.",
+  },
+  {
+    q: "Vocês oferecem contrato fechado ou pacotes prontos?",
+    a: "Não trabalhamos com pacotes prontos. Cada operação é desenhada após o diagnóstico, com escopo, prazos e investimento definidos de forma personalizada para o seu modelo de negócio.",
+  },
+  {
+    q: "O que acontece depois dos 6 meses iniciais?",
+    a: "Ao final do ciclo R.E.A.L, avaliamos a maturidade da presença digital e desenhamos a próxima fase: manutenção da autoridade, expansão para tráfego pago qualificado ou novos canais — sempre com base em dados reais da sua operação.",
+  },
 ];
 
 export const FAQ = () => (

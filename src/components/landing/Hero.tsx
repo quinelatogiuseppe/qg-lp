@@ -11,14 +11,6 @@ export const Hero = () => {
 
       <div className="container relative z-10">
         <Reveal as="div" className="mx-auto max-w-4xl text-center">
-          {/* Eyebrow */}
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-foreground/[0.02] px-4 py-1.5 backdrop-blur-md">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
-            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Agência · High-Ticket · Marketing Digital
-            </span>
-          </div>
-
           {/* H1 */}
           <h1 className="font-sans text-[clamp(2.4rem,6.4vw,5.5rem)] font-bold leading-[0.98] tracking-tightest text-foreground">
             O tráfego pago não vai{" "}
