@@ -53,12 +53,6 @@ export const Hero = () => {
         </Reveal>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block">
-        <div className="flex h-10 w-6 items-start justify-center rounded-full border border-foreground/15 p-1.5">
-          <span className="h-2 w-px animate-pulse bg-gold" />
-        </div>
-      </div>
     </section>
   );
 };
