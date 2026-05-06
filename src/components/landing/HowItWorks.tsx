@@ -1,36 +1,65 @@
 import { Reveal } from "./Reveal";
-import { Search, LayoutGrid, Award, Gem } from "lucide-react";
+import { useTilt } from "@/hooks/use-tilt";
 
 const STEPS = [
   {
     n: "01",
     letter: "R",
-    icon: Search,
     title: "Raiz",
     text: "Diagnóstico profundo do perfil e identificação dos fatores que impedem o negócio de aparecer no Google.",
   },
   {
     n: "02",
     letter: "E",
-    icon: LayoutGrid,
     title: "Estrutura",
     text: "Otimização completa do Google Business Profile para gerar confiança, relevância e profissionalismo.",
   },
   {
     n: "03",
     letter: "A",
-    icon: Award,
     title: "Autoridade",
     text: "Construção de reputação com avaliações, conteúdo e sinais locais que comprovam excelência.",
   },
   {
     n: "04",
     letter: "L",
-    icon: Gem,
     title: "Lapidação",
     text: "Ajustes contínuos para subir no ranking e sustentar crescimento previsível mês a mês.",
   },
 ];
+
+const TiltCard = ({ step, i }: { step: (typeof STEPS)[number]; i: number }) => {
+  const ref = useTilt<HTMLDivElement>(8);
+  return (
+    <Reveal delay={i * 120}>
+      <div
+        ref={ref}
+        style={{ transformStyle: "preserve-3d", willChange: "transform" }}
+        className="group relative h-full overflow-hidden rounded-2xl glass border border-foreground/10 p-7 sm:p-8 transition-[border-color,box-shadow] duration-300 hover:border-gold/40 hover:shadow-gold-soft"
+      >
+        {/* Watermark letter */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-5 top-2 select-none font-display italic leading-none text-[5.5rem] sm:text-[6.5rem] text-gold/15 transition-colors duration-300 group-hover:text-gold/30"
+        >
+          {step.letter}
+        </span>
+
+        <div className="relative">
+          <div className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
+            Etapa {step.n}
+          </div>
+          <h3 className="mt-6 font-display text-3xl font-medium text-foreground">
+            {step.title}
+          </h3>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            {step.text}
+          </p>
+        </div>
+      </div>
+    </Reveal>
+  );
+};
 
 export const HowItWorks = () => (
   <section id="processo" className="relative py-28 sm:py-36">
@@ -53,42 +82,10 @@ export const HowItWorks = () => (
         </Reveal>
       </div>
 
-      <div className="relative mt-20">
-        {/* Connector line (desktop) */}
-        <div
-          aria-hidden
-          className="absolute left-0 right-0 top-[3.25rem] hidden h-px md:block"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, hsl(var(--gold) / 0.5) 15%, hsl(var(--gold) / 0.5) 85%, transparent)",
-          }}
-        />
-
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 md:gap-6">
-          {STEPS.map((step, i) => (
-            <Reveal key={step.n} delay={i * 120} className="relative">
-              <div className="relative flex flex-col items-start">
-                {/* Letter badge */}
-                <div className="relative z-10 mb-6 flex h-[6.5rem] w-[6.5rem] items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-background" />
-                  <div className="absolute inset-0 rounded-full border border-gold/40" />
-                  <div className="relative flex h-full w-full flex-col items-center justify-center">
-                    <span className="text-[9px] uppercase tracking-[0.32em] text-muted-foreground">
-                      {step.n}
-                    </span>
-                    <span className="font-display italic text-4xl leading-none text-gold">
-                      {step.letter}
-                    </span>
-                    <step.icon className="mt-1 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                  </div>
-                </div>
-
-                <h3 className="text-lg font-semibold text-foreground">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+      <div className="mt-20 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.map((step, i) => (
+          <TiltCard key={step.n} step={step} i={i} />
+        ))}
       </div>
     </div>
   </section>
