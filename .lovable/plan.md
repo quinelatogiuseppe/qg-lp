@@ -1,79 +1,96 @@
 ## Escopo
 
-Três ajustes pontuais na landing page, sem mexer em outras seções/copy.
+Substituir o `AuroraBackground` (CSS) da Hero por um background animado em WebGL (Three.js) baseado no shader fornecido, com paleta retonalizada para a identidade visual da LP (preto profundo + dourado `#C5A059`), em vez do azul/púrpura aurora do snippet original.
+
+Sem alterações de copy, layout, CTAs ou tipografia da Hero.
 
 ---
 
-### 1. Remover o badge "Agência · High-Ticket · Marketing Digital"
+### 1. Dependências
 
-Arquivo: `src/components/landing/Hero.tsx` (linhas 14–20)
-
-Remover o bloco `<div className="mb-8 inline-flex ...">...</div>` por completo. O H1 passa a ser o primeiro elemento do bloco central. Nenhum outro ajuste de espaçamento (o `mb-8` sai junto com o badge).
-
----
-
-### 2. Redesenhar os cards do Método R.E.A.L (referência: imagem enviada)
-
-Arquivo: `src/components/landing/HowItWorks.tsx`
-
-Mudanças:
-
-- **Layout do card**: substituir o badge circular grande pela estrutura vista na referência:
-  - Card retangular com `rounded-2xl`, fundo `glass` (mesmo padrão usado no FAQ), borda sutil `border-foreground/10`, padding generoso (`p-7 sm:p-8`).
-  - Letra grande (`R / E / A / L`) renderizada **no canto superior direito**, em `font-display italic`, tamanho enorme (`text-7xl sm:text-8xl`), cor `text-gold/15` (marca d'água dourada).
-  - Eyebrow `ETAPA 0X` em uppercase tracking-wide no topo esquerdo (substitui o número atual).
-  - Título (`Raiz`, `Estrutura`...) em `font-display` (Playfair) tamanho `text-3xl`, abaixo do eyebrow.
-  - Descrição em `text-sm text-muted-foreground` abaixo do título.
-  - Remover ícones Lucide (`Search/LayoutGrid/Award/Gem`) — não aparecem na referência.
-- **Connector line desktop**: remover (a referência não tem).
-- **Efeito 3D tilt no hover**: criar novo hook `src/hooks/use-tilt.ts` que aplica `rotateX/rotateY` baseado na posição do mouse via `requestAnimationFrame`, com `perspective` no container e `transform-style: preserve-3d`. Reset suave em `mouseleave`. Desativado em `(hover: none)` (touch).
-  - Aplicar via `ref={tiltRef}` em cada card, com `style={{ transformStyle: "preserve-3d", willChange: "transform" }}`.
-  - Adicionar destaque sutil: ao hover, a borda muda para `border-gold/40` e a letra de fundo passa de `text-gold/15` para `text-gold/30` via `group-hover`. O primeiro card da referência mostra esse estado destacado.
-  - Inclinação máxima: ~8 graus, com transição `transition-transform duration-200 ease-out`.
-
-Estrutura final de cada card (esquemática):
+Instalar:
 
 ```text
-┌─────────────────────────────┐
-│ ETAPA 01            R       │
-│                             │
-│ Raiz                        │
-│                             │
-│ Diagnóstico profundo do...  │
-└─────────────────────────────┘
+three
+@types/three (dev)
 ```
 
----
-
-### 3. Ampliar o FAQ
-
-Arquivo: `src/components/landing/FAQ.tsx`
-
-Manter as 3 perguntas existentes e **adicionar 4 novas** (extraídas dos PDFs já enviados — qualificação, serviços, método). Total: 7 itens.
-
-Novas perguntas (seguem o tom já estabelecido):
-
-1. **Quanto tempo leva para ver os primeiros resultados?**  
-   "Os primeiros sinais (aumento de visualizações, ligações e pedidos de rota no Google) costumam aparecer entre 60 e 90 dias. Resultados consistentes de ranking e autoridade exigem o ciclo completo de 6 meses do Método R.E.A.L."
-
-2. **A Quinelato Giuseppe atende qualquer tipo de negócio?**  
-   "Trabalhamos com empresas que têm ticket médio compatível com investimento em presença digital de longo prazo e que estejam dispostas a seguir o método. Negócios sem operação estruturada ou que buscam resultado imediato não são perfil."
-
-3. **Vocês oferecem contrato fechado ou pacotes prontos?**  
-   "Não trabalhamos com pacotes prontos. Cada operação é desenhada após o diagnóstico, com escopo, prazos e investimento definidos de forma personalizada para o seu modelo de negócio."
-
-4. **O que acontece depois dos 6 meses iniciais?**  
-   "Ao final do ciclo R.E.A.L, avaliamos a maturidade da presença digital e desenhamos a próxima fase: manutenção da autoridade, expansão para tráfego pago qualificado ou novos canais — sempre com base em dados reais da sua operação."
+`lucide-react` já está no projeto. Não usar `tw-animate-css` nem alterar o Tailwind (estamos em Tailwind 3, não 4 — a instrução do snippet é genérica).
 
 ---
 
-## Arquivos modificados
+### 2. Novo componente: `src/components/landing/ShaderBackground.tsx`
+
+Componente client-side que monta um canvas Three.js full-bleed (`absolute inset-0`), com:
+
+- `OrthographicCamera` + `PlaneGeometry(2,2)` + `ShaderMaterial`
+- `iTime` e `iResolution` como uniforms
+- `requestAnimationFrame` loop, cleanup completo no unmount (cancel frame, remove listener, `dispose()` geometry/material/renderer, remove canvas do DOM)
+- `renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))` para performance
+- Tamanho baseado no **container pai** (`clientWidth/clientHeight`), não em `window`, para o canvas preencher só a Hero
+- Respeitar `prefers-reduced-motion`: se reduzido, renderiza um único frame estático e não anima
+
+**Retonalização para a identidade dourada:**
+
+No fragment shader original, a cor por iteração é:
+
+```glsl
+vec4 auroraColors = vec4(
+  0.1 + 0.3 * sin(...),   // R baixo
+  0.3 + 0.5 * cos(...),   // G médio
+  0.7 + 0.3 * sin(...),   // B alto → puxa azul/roxo
+  1.0
+);
+```
+
+Trocar por uma paleta dourada (gold `#C5A059` ≈ `vec3(0.77, 0.63, 0.35)`, gold-bright ≈ `vec3(0.85, 0.72, 0.45)`, gold-deep ≈ `vec3(0.55, 0.42, 0.22)`):
+
+```glsl
+vec3 goldA = vec3(0.85, 0.72, 0.45);  // gold-bright
+vec3 goldB = vec3(0.77, 0.63, 0.35);  // gold
+vec3 goldC = vec3(0.40, 0.28, 0.12);  // deep amber
+float t = 0.5 + 0.5 * sin(i * 0.25 + iTime * 0.4);
+vec3 col = mix(goldC, mix(goldB, goldA, t), 0.5 + 0.5 * cos(i * 0.3 + iTime * 0.3));
+vec4 auroraColors = vec4(col, 1.0);
+```
+
+Manter a estrutura de loop, fbm, tail noise e tonemap (`tanh(pow(o/100.0, 1.6))`). Reduzir o multiplicador final de `1.5` para `~1.1` para não estourar o branco e preservar o look "dark luxury".
+
+Adicionar um leve fundo preto base no fragment (`o.rgb += vec3(0.0)` — manter), e fora do shader, sobrepor camadas para integrar com o resto da seção:
+
+- Vinheta radial preta nas bordas (mesma do `AuroraBackground` atual)
+- Fade superior/inferior para `bg-background` (transição suave para a próxima seção)
+- Camada `.grain` reaproveitada do `index.css`
+
+---
+
+### 3. Integração na Hero
+
+`src/components/landing/Hero.tsx`:
+
+- Remover import e uso de `AuroraBackground`
+- Adicionar `<ShaderBackground />` no mesmo lugar (primeiro filho dentro da `<section>`, com `pointer-events-none`)
+- Manter intactos: H1, subtítulo, CTAs, trust line, scroll indicator, IDs, classes do container
+
+O `AuroraBackground.tsx` continua existindo no projeto (não é removido) — só deixa de ser usado na Hero.
+
+---
+
+### 4. Fallback / Performance
+
+- Canvas com `pointer-events-none` para não interferir nos cliques
+- `aria-hidden="true"` no wrapper
+- Em telas muito pequenas (`< 640px`) ou se `prefers-reduced-motion: reduce`, render estático (1 frame) — economiza bateria mobile
+- Renderer com `alpha: false`, `antialias: true`, `powerPreference: "high-performance"`
+
+---
+
+## Arquivos
 
 ```text
-src/components/landing/Hero.tsx          (remover badge)
-src/components/landing/HowItWorks.tsx    (redesign cards + tilt)
-src/components/landing/FAQ.tsx           (4 novas Q&A)
-src/hooks/use-tilt.ts                    (novo hook 3D tilt)
+src/components/landing/ShaderBackground.tsx   (novo)
+src/components/landing/Hero.tsx               (trocar background)
+package.json                                  (deps: three, @types/three)
 ```
 
-Sem alterações em design tokens, tipografia global, copy de outras seções ou animações existentes.
+Sem mudanças em `index.css`, `tailwind.config.ts`, design tokens ou demais seções.
