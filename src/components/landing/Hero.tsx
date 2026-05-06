@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { AuroraBackground } from "./AuroraBackground";
+import { ShaderBackground } from "./ShaderBackground";
 import { MagneticButton } from "./MagneticButton";
 import { Reveal } from "./Reveal";
 import { waLink, WA_MESSAGES } from "@/lib/site";
@@ -7,7 +7,7 @@ import { waLink, WA_MESSAGES } from "@/lib/site";
 export const Hero = () => {
   return (
     <section id="top" className="relative isolate flex min-h-[100svh] items-center overflow-hidden pt-32">
-      <AuroraBackground />
+      <ShaderBackground />
 
       <div className="container relative z-10">
         <Reveal as="div" className="mx-auto max-w-4xl text-center">
