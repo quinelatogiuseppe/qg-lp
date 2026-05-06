@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { AuroraBackground } from "./AuroraBackground";
+import { ShaderBackground } from "./ShaderBackground";
 import { MagneticButton } from "./MagneticButton";
 import { Reveal } from "./Reveal";
 import { waLink, WA_MESSAGES } from "@/lib/site";
