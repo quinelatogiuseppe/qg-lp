@@ -1,13 +1,19 @@
 import { ArrowRight } from "lucide-react";
-import { ShaderBackground } from "./ShaderBackground";
+import { lazy, Suspense } from "react";
 import { MagneticButton } from "./MagneticButton";
 import { Reveal } from "./Reveal";
 import { waLink, WA_MESSAGES } from "@/lib/site";
 
+const ShaderBackground = lazy(() =>
+  import("./ShaderBackground").then((m) => ({ default: m.ShaderBackground })),
+);
+
 export const Hero = () => {
   return (
     <section id="top" className="relative isolate flex min-h-[100svh] items-center overflow-hidden pt-32">
-      <ShaderBackground />
+      <Suspense fallback={<div aria-hidden className="absolute inset-0 bg-background" />}>
+        <ShaderBackground />
+      </Suspense>
 
       <div className="container relative z-10">
         <Reveal as="div" className="mx-auto max-w-4xl text-center">

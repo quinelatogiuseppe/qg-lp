@@ -31,10 +31,14 @@ export const CustomCursor = () => {
     };
 
     const tick = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ringX - 18}px, ${ringY - 18}px, 0)`;
+      const dx = mouseX - ringX;
+      const dy = mouseY - ringY;
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        ringX += dx * 0.18;
+        ringY += dy * 0.18;
+        if (ringRef.current) {
+          ringRef.current.style.transform = `translate3d(${ringX - 18}px, ${ringY - 18}px, 0)`;
+        }
       }
       raf = requestAnimationFrame(tick);
     };

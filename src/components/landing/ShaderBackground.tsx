@@ -4,6 +4,7 @@ import * as THREE from "three";
 /**
  * Full-bleed animated WebGL background for the Hero.
  * Aurora-style fbm shader, retoned to the brand's gold palette.
+ * Optimizations: pauses when off-screen or tab hidden, FPS-capped, mobile-scaled.
  */
 export const ShaderBackground = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -13,6 +14,7 @@ export const ShaderBackground = () => {
     if (!container) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -21,7 +23,8 @@ export const ShaderBackground = () => {
       alpha: false,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    const pixelRatio = Math.min(window.devicePixelRatio, isMobile ? 1 : 1.25);
+    renderer.setPixelRatio(pixelRatio);
 
     const size = () => ({
       w: container.clientWidth || window.innerWidth,
@@ -84,10 +87,9 @@ export const ShaderBackground = () => {
 
           float f = 2.0 + fbm(p + vec2(iTime * 5.0, 0.0)) * 0.5;
 
-          // Brand gold palette
-          vec3 goldA = vec3(0.85, 0.72, 0.45); // gold-bright
-          vec3 goldB = vec3(0.77, 0.63, 0.35); // gold #C5A059
-          vec3 goldC = vec3(0.40, 0.28, 0.12); // deep amber
+          vec3 goldA = vec3(0.85, 0.72, 0.45);
+          vec3 goldB = vec3(0.77, 0.63, 0.35);
+          vec3 goldC = vec3(0.40, 0.28, 0.12);
 
           for (float i = 0.0; i < 35.0; i++) {
             v = p + cos(i * i + (iTime + p.x * 0.08) * 0.025 + i * vec2(13.0, 11.0)) * 3.5
@@ -116,17 +118,39 @@ export const ShaderBackground = () => {
     scene.add(mesh);
 
     let frameId = 0;
-    const animate = () => {
-      material.uniforms.iTime.value += 0.016;
-      renderer.render(scene, camera);
+    let isVisible = true;
+    let isTabVisible = !document.hidden;
+    let lastFrame = 0;
+    const FPS_CAP = 30;
+    const FRAME_INTERVAL = 1000 / FPS_CAP;
+
+    const animate = (now: number) => {
       frameId = requestAnimationFrame(animate);
+      if (!isVisible || !isTabVisible) return;
+      if (now - lastFrame < FRAME_INTERVAL) return;
+      lastFrame = now;
+      material.uniforms.iTime.value += FRAME_INTERVAL / 1000;
+      renderer.render(scene, camera);
     };
 
     if (reduceMotion) {
       renderer.render(scene, camera);
     } else {
-      animate();
+      frameId = requestAnimationFrame(animate);
     }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries[0]?.isIntersecting ?? true;
+      },
+      { threshold: 0 },
+    );
+    io.observe(container);
+
+    const onVisibility = () => {
+      isTabVisible = !document.hidden;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     const handleResize = () => {
       const { w, h } = size();
@@ -138,6 +162,8 @@ export const ShaderBackground = () => {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+      io.disconnect();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
@@ -149,21 +175,11 @@ export const ShaderBackground = () => {
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      {/* Base background fallback */}
       <div className="absolute inset-0 bg-background" />
-
-      {/* WebGL canvas host */}
       <div ref={containerRef} className="absolute inset-0" />
-
-      {/* Top fade */}
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background to-transparent" />
-      {/* Bottom fade for transition into next section */}
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
-
-      {/* Grain texture */}
       <div className="grain" />
-
-      {/* Edge vignette */}
       <div
         className="absolute inset-0"
         style={{

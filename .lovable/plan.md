@@ -1,96 +1,79 @@
-## Escopo
 
-Substituir o `AuroraBackground` (CSS) da Hero por um background animado em WebGL (Three.js) baseado no shader fornecido, com paleta retonalizada para a identidade visual da LP (preto profundo + dourado `#C5A059`), em vez do azul/púrpura aurora do snippet original.
+# Performance + Social Sharing (Open Graph)
 
-Sem alterações de copy, layout, CTAs ou tipografia da Hero.
+Objetivo: deixar a LP mais leve e rápida, sem alterar layout, copy ou elementos visuais, e estruturar metatags para que o link gere cartão rico em WhatsApp, Facebook e LinkedIn.
 
----
+## 1) Performance — sem mudanças visuais
 
-### 1. Dependências
+### a) ShaderBackground (Three.js) — maior gargalo
+O Three.js sozinho representa ~600KB no bundle e o shader roda 35 iterações por pixel a 60fps. Otimizações sem alterar visual:
 
-Instalar:
+- **Code-split via `React.lazy` + `Suspense`** com fallback em `bg-background` (mesmo background base já usado no componente). O Three só carrega após o JS principal hidratar — melhora LCP/TTI imediatamente.
+- **Pausar animação quando fora do viewport** com `IntersectionObserver` (não renderiza frames quando o usuário rolou para baixo). Pausa também em `document.visibilitychange` (aba oculta).
+- **Cap de FPS em 30fps**: para um shader ambiente esse delta é imperceptível e reduz GPU/CPU pela metade.
+- **Reduzir pixelRatio para 1.25** (atual 1.5). Diferença visual nula em telas comuns; ganho de ~30% em fragment shader.
+- **Diminuir resolução do canvas em telas pequenas** (escala 0.85 em mobile via `setSize` com `updateStyle=false`) — mantém o tamanho CSS, só reduz pixels processados.
 
-```text
-three
-@types/three (dev)
-```
+### b) Custom Cursor
+- Continuar montando, mas o `requestAnimationFrame` do ring só anda quando o mouse moveu desde o último frame (early-return) — corta loop ocioso.
 
-`lucide-react` já está no projeto. Não usar `tw-animate-css` nem alterar o Tailwind (estamos em Tailwind 3, não 4 — a instrução do snippet é genérica).
+### c) Carregamento de fontes
+`index.html` carrega 4 famílias Google Fonts com muitos pesos. Sem mudar tipografia visível:
+- Adicionar `&display=swap` (já presente) + `<link rel="preload" as="style">` para o CSS de fontes.
+- Manter exatamente os mesmos pesos e famílias usados na LP. (Nada removido — só preconnect/preload melhorados.)
 
----
+### d) Imagens / assets
+- Não há imagens pesadas no DOM da LP atual. Nada a fazer aqui além de garantir `loading="lazy"` e `decoding="async"` em qualquer `<img>` futuro (não há agora).
 
-### 2. Novo componente: `src/components/landing/ShaderBackground.tsx`
+### e) Bundle/Vite
+- Configurar `build.rollupOptions.output.manualChunks` para isolar `three`, `recharts`, Radix em chunks separados — reduz o JS inicial.
+- Confirmar `componentTagger` apenas em dev (já está).
 
-Componente client-side que monta um canvas Three.js full-bleed (`absolute inset-0`), com:
+### f) Hints no HTML
+- `<link rel="dns-prefetch">` + `preconnect` para `connect.facebook.net` (Pixel) e o storage do OG image.
+- Mover o script do Meta Pixel para carregar com `defer` ou após `load`, para não competir com o LCP. (Sem remover o pixel.)
 
-- `OrthographicCamera` + `PlaneGeometry(2,2)` + `ShaderMaterial`
-- `iTime` e `iResolution` como uniforms
-- `requestAnimationFrame` loop, cleanup completo no unmount (cancel frame, remove listener, `dispose()` geometry/material/renderer, remove canvas do DOM)
-- `renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))` para performance
-- Tamanho baseado no **container pai** (`clientWidth/clientHeight`), não em `window`, para o canvas preencher só a Hero
-- Respeitar `prefers-reduced-motion`: se reduzido, renderiza um único frame estático e não anima
+### g) CSS
+- Adicionar `content-visibility: auto` + `contain-intrinsic-size` nas seções abaixo da hero (`PainSection`, `HowItWorks`, `Services`, `ForWhom`, `Marquee`, `FAQ`, `Footer`). O navegador pula layout/paint até a seção entrar no viewport. Zero impacto visual.
+- Marquee: já tem `will-change: transform`. Manter.
 
-**Retonalização para a identidade dourada:**
+## 2) Open Graph / Cartões ricos
 
-No fragment shader original, a cor por iteração é:
+`index.html` já tem og:image, og:title, og:description, twitter:card. Falta para cobrir bem WhatsApp, Facebook e LinkedIn:
 
-```glsl
-vec4 auroraColors = vec4(
-  0.1 + 0.3 * sin(...),   // R baixo
-  0.3 + 0.5 * cos(...),   // G médio
-  0.7 + 0.3 * sin(...),   // B alto → puxa azul/roxo
-  1.0
-);
-```
+Adicionar em `<head>`:
+- `<meta property="og:url" content="https://qg-lp.lovable.app/">`
+- `<meta property="og:site_name" content="Quinelato Giuseppe">`
+- `<meta property="og:locale" content="pt_BR">`
+- `<meta property="og:image:secure_url" content="...">` (mesma URL https)
+- `<meta property="og:image:type" content="image/webp">`
+- `<meta property="og:image:width" content="1200">`
+- `<meta property="og:image:height" content="630">`
+- `<meta property="og:image:alt" content="Quinelato Giuseppe — Presença digital de excelência">`
+- `<meta name="twitter:site" content="@quinelatogiuseppe">` (placeholder; remover se não houver conta)
+- `<meta name="twitter:image:alt" content="...">`
+- `<link rel="canonical">` já existe.
 
-Trocar por uma paleta dourada (gold `#C5A059` ≈ `vec3(0.77, 0.63, 0.35)`, gold-bright ≈ `vec3(0.85, 0.72, 0.45)`, gold-deep ≈ `vec3(0.55, 0.42, 0.22)`):
+Observação WhatsApp: prefere imagens < 300KB e proporção próxima a 1.91:1. A imagem atual no GCS já é webp 1200×630-ish — apenas confirmar dimensões nos metadados. Se for maior, substituir pela URL atual está OK; não criamos nova imagem.
 
-```glsl
-vec3 goldA = vec3(0.85, 0.72, 0.45);  // gold-bright
-vec3 goldB = vec3(0.77, 0.63, 0.35);  // gold
-vec3 goldC = vec3(0.40, 0.28, 0.12);  // deep amber
-float t = 0.5 + 0.5 * sin(i * 0.25 + iTime * 0.4);
-vec3 col = mix(goldC, mix(goldB, goldA, t), 0.5 + 0.5 * cos(i * 0.3 + iTime * 0.3));
-vec4 auroraColors = vec4(col, 1.0);
-```
+Observação LinkedIn: usa `og:title`, `og:description`, `og:image`. Após deploy, recomendar passar pelo Post Inspector da LinkedIn para limpar cache.
 
-Manter a estrutura de loop, fbm, tail noise e tonemap (`tanh(pow(o/100.0, 1.6))`). Reduzir o multiplicador final de `1.5` para `~1.1` para não estourar o branco e preservar o look "dark luxury".
+## 3) Arquivos afetados
 
-Adicionar um leve fundo preto base no fragment (`o.rgb += vec3(0.0)` — manter), e fora do shader, sobrepor camadas para integrar com o resto da seção:
+- `index.html` — defer no Pixel, preload de fontes, dns-prefetch, metatags OG completas.
+- `vite.config.ts` — `manualChunks` para `three`, `recharts`, `@radix-ui/*`.
+- `src/components/landing/Hero.tsx` — `lazy(() => import('./ShaderBackground'))` + `<Suspense fallback={<div className="absolute inset-0 bg-background"/>}>`.
+- `src/components/landing/ShaderBackground.tsx` — IntersectionObserver pausa, visibilitychange pausa, FPS cap 30, pixelRatio 1.25, escala mobile.
+- `src/components/landing/CustomCursor.tsx` — early-return no rAF quando mouse parado.
+- `src/index.css` — `content-visibility: auto` em `section[id]:not(#top)`.
 
-- Vinheta radial preta nas bordas (mesma do `AuroraBackground` atual)
-- Fade superior/inferior para `bg-background` (transição suave para a próxima seção)
-- Camada `.grain` reaproveitada do `index.css`
+Nenhum elemento, copy, cor, fonte, espaçamento ou comportamento visual é alterado. Apenas mecânicas internas de carregamento e renderização.
 
----
+## 4) Validação após implementação
 
-### 3. Integração na Hero
-
-`src/components/landing/Hero.tsx`:
-
-- Remover import e uso de `AuroraBackground`
-- Adicionar `<ShaderBackground />` no mesmo lugar (primeiro filho dentro da `<section>`, com `pointer-events-none`)
-- Manter intactos: H1, subtítulo, CTAs, trust line, scroll indicator, IDs, classes do container
-
-O `AuroraBackground.tsx` continua existindo no projeto (não é removido) — só deixa de ser usado na Hero.
-
----
-
-### 4. Fallback / Performance
-
-- Canvas com `pointer-events-none` para não interferir nos cliques
-- `aria-hidden="true"` no wrapper
-- Em telas muito pequenas (`< 640px`) ou se `prefers-reduced-motion: reduce`, render estático (1 frame) — economiza bateria mobile
-- Renderer com `alpha: false`, `antialias: true`, `powerPreference: "high-performance"`
-
----
-
-## Arquivos
-
-```text
-src/components/landing/ShaderBackground.tsx   (novo)
-src/components/landing/Hero.tsx               (trocar background)
-package.json                                  (deps: three, @types/three)
-```
-
-Sem mudanças em `index.css`, `tailwind.config.ts`, design tokens ou demais seções.
+- Rodar `browser--performance_profile` antes/depois para comparar LCP, TBT e long tasks.
+- Testar OG com:
+  - Facebook Sharing Debugger
+  - LinkedIn Post Inspector
+  - WhatsApp (enviar link a si mesmo após deploy)
+- Confirmar visualmente que a LP está idêntica.
