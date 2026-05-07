@@ -79,6 +79,12 @@
 
   section[id] { scroll-margin-top: 96px; }
 
+  /* Skip rendering work for off-screen sections (no visual impact). */
+  section[id]:not(#top) {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 800px;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "ss01", "cv11";
