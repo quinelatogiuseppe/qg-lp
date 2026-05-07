@@ -38,6 +38,9 @@ const Monogram = () => (
     src={logoQG}
     alt="Quinelato Giuseppe — Monograma QG"
     className="h-9 w-9 select-none object-contain"
+    width={36}
+    height={36}
+    decoding="async"
     draggable={false}
   />
 );
