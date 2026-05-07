@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import logoQG from "@/assets/logo-qg.png";
+import logoQG from "@/assets/logo-qg.webp";
 
 interface Props {
   className?: string;
