@@ -22,11 +22,19 @@ export const CustomCursor = () => {
     let ringY = mouseY;
     let raf = 0;
 
+    let lastHoverTarget: Element | null = null;
     const onMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${mouseX - 3}px, ${mouseY - 3}px, 0)`;
+      }
+      // Hover detection piggybacks on mousemove (cached) — avoids separate mouseover listener.
+      const target = e.target as Element | null;
+      if (target !== lastHoverTarget) {
+        lastHoverTarget = target;
+        const isInteractive = !!target?.closest('a, button, [role="button"], input, textarea, select, [data-cursor="hover"]');
+        setHovered(isInteractive);
       }
     };
 
@@ -44,18 +52,10 @@ export const CustomCursor = () => {
     };
     raf = requestAnimationFrame(tick);
 
-    const checkHover = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      const isInteractive = !!target?.closest('a, button, [role="button"], input, textarea, select, [data-cursor="hover"]');
-      setHovered(isInteractive);
-    };
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseover", checkHover);
+    window.addEventListener("mousemove", onMove, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseover", checkHover);
       cancelAnimationFrame(raf);
       document.documentElement.classList.remove("has-custom-cursor");
     };
