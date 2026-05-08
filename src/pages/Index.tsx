@@ -1,14 +1,17 @@
+import { lazy, Suspense } from "react";
 import { CustomCursor } from "@/components/landing/CustomCursor";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
-import { PainSection } from "@/components/landing/PainSection";
-import { HowItWorks } from "@/components/landing/HowItWorks";
-import { Services } from "@/components/landing/Services";
-import { ForWhom } from "@/components/landing/ForWhom";
-import { Marquee } from "@/components/landing/Marquee";
-import { FAQ } from "@/components/landing/FAQ";
-import { Footer } from "@/components/landing/Footer";
-import { StickyMobileCTA } from "@/components/landing/StickyMobileCTA";
+
+// Below-the-fold sections: code-split to reduce initial JS and main-thread work.
+const PainSection = lazy(() => import("@/components/landing/PainSection").then(m => ({ default: m.PainSection })));
+const HowItWorks = lazy(() => import("@/components/landing/HowItWorks").then(m => ({ default: m.HowItWorks })));
+const Services = lazy(() => import("@/components/landing/Services").then(m => ({ default: m.Services })));
+const ForWhom = lazy(() => import("@/components/landing/ForWhom").then(m => ({ default: m.ForWhom })));
+const Marquee = lazy(() => import("@/components/landing/Marquee").then(m => ({ default: m.Marquee })));
+const FAQ = lazy(() => import("@/components/landing/FAQ").then(m => ({ default: m.FAQ })));
+const Footer = lazy(() => import("@/components/landing/Footer").then(m => ({ default: m.Footer })));
+const StickyMobileCTA = lazy(() => import("@/components/landing/StickyMobileCTA").then(m => ({ default: m.StickyMobileCTA })));
 
 const Index = () => {
   return (
@@ -16,14 +19,16 @@ const Index = () => {
       <CustomCursor />
       <Header />
       <Hero />
-      <PainSection />
-      <HowItWorks />
-      <Services />
-      <ForWhom />
-      <Marquee />
-      <FAQ />
-      <Footer />
-      <StickyMobileCTA />
+      <Suspense fallback={null}>
+        <PainSection />
+        <HowItWorks />
+        <Services />
+        <ForWhom />
+        <Marquee />
+        <FAQ />
+        <Footer />
+        <StickyMobileCTA />
+      </Suspense>
     </main>
   );
 };

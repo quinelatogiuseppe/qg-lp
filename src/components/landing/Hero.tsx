@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { MagneticButton } from "./MagneticButton";
 import { Reveal } from "./Reveal";
 import { waLink, WA_MESSAGES } from "@/lib/site";
@@ -8,12 +8,50 @@ const ShaderBackground = lazy(() =>
   import("./ShaderBackground").then((m) => ({ default: m.ShaderBackground })),
 );
 
+/** Static gold-tinted background for mobile (no WebGL, no Three.js). */
+const StaticGoldBackground = () => (
+  <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 bg-background" />
+    <div
+      className="absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(ellipse 90% 60% at 50% 35%, hsl(39 47% 56% / 0.22), transparent 65%), radial-gradient(ellipse 60% 40% at 50% 80%, hsl(36 45% 42% / 0.18), transparent 70%)",
+      }}
+    />
+    <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background to-transparent" />
+    <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
+    <div className="grain" />
+    <div
+      className="absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(ellipse at center, transparent 50%, hsl(0 0% 0% / 0.6) 100%)",
+      }}
+    />
+  </div>
+);
+
 export const Hero = () => {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 769px)");
+    const update = () => setIsDesktop(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+
   return (
     <section id="top" className="relative isolate flex min-h-[100svh] items-center overflow-hidden pt-32">
-      <Suspense fallback={<div aria-hidden className="absolute inset-0 bg-background" />}>
-        <ShaderBackground />
-      </Suspense>
+      {isDesktop ? (
+        <Suspense fallback={<StaticGoldBackground />}>
+          <ShaderBackground />
+        </Suspense>
+      ) : (
+        <StaticGoldBackground />
+      )}
 
       <div className="container relative z-10">
         <Reveal as="div" className="mx-auto max-w-4xl text-center">
@@ -58,7 +96,6 @@ export const Hero = () => {
           </Reveal>
         </Reveal>
       </div>
-
     </section>
   );
 };

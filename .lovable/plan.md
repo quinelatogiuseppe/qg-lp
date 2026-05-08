@@ -1,79 +1,64 @@
+# Plano de Performance — Mobile PageSpeed
 
-# Performance + Social Sharing (Open Graph)
+Meta: subir nota mobile sem alterar layout, cores, textos ou identidade visual. Desktop permanece idêntico (com shader). Mobile recebe um fundo CSS estático equivalente em paleta dourada (sem WebGL).
 
-Objetivo: deixar a LP mais leve e rápida, sem alterar layout, copy ou elementos visuais, e estruturar metatags para que o link gere cartão rico em WhatsApp, Facebook e LinkedIn.
+## 1. Hero — desabilitar shader no mobile
+- Em `Hero.tsx`, detectar mobile via `matchMedia("(max-width: 768px)")` antes do `Suspense`.
+- Mobile: renderizar apenas um fundo CSS dourado (radial-gradient com tokens existentes `--gold` + `grain` + vignette) — mesmo visual do shader em estado "estático", já que o shader gera padrão sutil. Nada de Three.js carregado/baixado em mobile.
+- Desktop: mantém `lazy(ShaderBackground)` como hoje.
+- Resultado: bundle `three` (~150KB gzip) **não baixa** em mobile, eliminando boa parte do TBT e do JS não usado.
 
-## 1) Performance — sem mudanças visuais
+**Preloader**: NÃO adicionar. Sem o Three.js no mobile, o LCP cai naturalmente; um preloader só atrasaria o First Paint. Mantemos sem preloader.
 
-### a) ShaderBackground (Three.js) — maior gargalo
-O Three.js sozinho representa ~600KB no bundle e o shader roda 35 iterações por pixel a 60fps. Otimizações sem alterar visual:
+## 2. Reduzir JavaScript não usado
+- Remover `src/components/landing/AuroraBackground.tsx` (não importado em lugar nenhum).
+- Remover dependências não usadas do `package.json`:
+  `embla-carousel-react`, `react-day-picker`, `react-resizable-panels`, `vaul`, `cmdk`, `input-otp`, `recharts`, `react-hook-form`, `@hookform/resolvers`, `date-fns`, `next-themes`, e os Radix não usados pela LP (`accordion` é usado pelo FAQ — manter; verificar e manter só os realmente importados pela landing + toasts).
+- Remover componentes UI shadcn correspondentes que dependem dessas libs (carousel, chart, sidebar, calendar, drawer, command, input-otp, form, resizable). Eles não são tree-shaken porque o Vite só remove módulos não importados — eles JÁ não são importados pela LP, mas removê-los do repo evita ruído. Verificação: `rg` confirma que nenhum é usado fora dos próprios arquivos `ui/`.
+- `Sonner` toaster em `App.tsx`: manter (usado), mas avaliar remoção se não houver chamada `toast()` na LP. Conferir antes.
 
-- **Code-split via `React.lazy` + `Suspense`** com fallback em `bg-background` (mesmo background base já usado no componente). O Three só carrega após o JS principal hidratar — melhora LCP/TTI imediatamente.
-- **Pausar animação quando fora do viewport** com `IntersectionObserver` (não renderiza frames quando o usuário rolou para baixo). Pausa também em `document.visibilitychange` (aba oculta).
-- **Cap de FPS em 30fps**: para um shader ambiente esse delta é imperceptível e reduz GPU/CPU pela metade.
-- **Reduzir pixelRatio para 1.25** (atual 1.5). Diferença visual nula em telas comuns; ganho de ~30% em fragment shader.
-- **Diminuir resolução do canvas em telas pequenas** (escala 0.85 em mobile via `setSize` com `updateStyle=false`) — mantém o tamanho CSS, só reduz pixels processados.
+## 3. Adiar scripts de terceiros (Meta Pixel)
+- Hoje carrega em `window.load`. Trocar por: carregar no primeiro `requestIdleCallback` OU após `setTimeout(2500)` + na primeira interação (`scroll`/`pointerdown`/`keydown`, once). Isso libera a thread principal durante o LCP.
 
-### b) Custom Cursor
-- Continuar montando, mas o `requestAnimationFrame` do ring só anda quando o mouse moveu desde o último frame (early-return) — corta loop ocioso.
+## 4. CSS / fontes
+- Hoje carregamos 4 famílias com 11 pesos. Reduzir para os pesos realmente usados:
+  - Plus Jakarta Sans: 400, 500, 600, 700 (remover 300, 800)
+  - Playfair Display: italic 400, 500 (remover 600, 700)
+  - Cormorant Garamond: 500, 600 (remover 400, 700)
+  - Inter: remover totalmente se não usada (verificar `rg "Inter"` em components/css). Se não usada, retirar.
+- Adicionar `font-display: swap` já está no `&display=swap`.
+- Trocar `<link rel="preload" as="style">` + `<link rel="stylesheet">` por apenas `<link rel="stylesheet" media="print" onload="this.media='all'">` para não bloquear render. Manter `<noscript>` fallback.
 
-### c) Carregamento de fontes
-`index.html` carrega 4 famílias Google Fonts com muitos pesos. Sem mudar tipografia visível:
-- Adicionar `&display=swap` (já presente) + `<link rel="preload" as="style">` para o CSS de fontes.
-- Manter exatamente os mesmos pesos e famílias usados na LP. (Nada removido — só preconnect/preload melhorados.)
+## 5. Reflow forçado
+- `CustomCursor`: substituir `mouseover` global (causa reflow ao consultar `closest`) por delegação leve com cache; já usa `requestAnimationFrame`. Remover atualizações quando `dx/dy` < 0.1 (já feito).
+- `useIsMobile`: usar `matchMedia` puro sem ler `window.innerWidth` (evita layout read). Trocar `setIsMobile(window.innerWidth < ...)` por `setIsMobile(mql.matches)`.
 
-### d) Imagens / assets
-- Não há imagens pesadas no DOM da LP atual. Nada a fazer aqui além de garantir `loading="lazy"` e `decoding="async"` em qualquer `<img>` futuro (não há agora).
+## 6. Imagens
+- Garantir `loading="lazy"` + `decoding="async"` em todas imagens fora do hero (Services, ForWhom, Footer etc.) — varrer e aplicar.
+- Logo do header já é WebP 6.5KB com `width/height` explícitos — manter.
+- Não há `<img>` LCP; o LCP é o H1 do hero (texto), que ganha prioridade automaticamente ao remover o canvas no mobile.
 
-### e) Bundle/Vite
-- Configurar `build.rollupOptions.output.manualChunks` para isolar `three`, `recharts`, Radix em chunks separados — reduz o JS inicial.
-- Confirmar `componentTagger` apenas em dev (já está).
+## 7. Build / code-splitting
+- `vite.config.ts`: adicionar `chunkSizeWarningLimit`, manter `manualChunks`. Adicionar split do `framer-motion`/recharts? Não usados — irrelevantes após poda.
+- Lazy-load das seções abaixo da dobra: envolver `PainSection`, `HowItWorks`, `Services`, `ForWhom`, `Marquee`, `FAQ`, `Footer` com `React.lazy` em `Index.tsx`, com `Suspense fallback={null}`. Pequenos por seção, mas reduzem JS inicial e long tasks.
 
-### f) Hints no HTML
-- `<link rel="dns-prefetch">` + `preconnect` para `connect.facebook.net` (Pixel) e o storage do OG image.
-- Mover o script do Meta Pixel para carregar com `defer` ou após `load`, para não competir com o LCP. (Sem remover o pixel.)
+## 8. CSS não utilizado
+- Tailwind já purga via `content` no `tailwind.config.ts`. Após remover os componentes UI não usados, o CSS final cai mais.
 
-### g) CSS
-- Adicionar `content-visibility: auto` + `contain-intrinsic-size` nas seções abaixo da hero (`PainSection`, `HowItWorks`, `Services`, `ForWhom`, `Marquee`, `FAQ`, `Footer`). O navegador pula layout/paint até a seção entrar no viewport. Zero impacto visual.
-- Marquee: já tem `will-change: transform`. Manter.
+## Arquivos afetados
+- `src/components/landing/Hero.tsx` (mobile sem shader)
+- `src/components/landing/CustomCursor.tsx` (delegação)
+- `src/hooks/use-mobile.tsx` (sem reflow)
+- `src/pages/Index.tsx` (lazy sections)
+- `src/components/landing/AuroraBackground.tsx` (deletar)
+- `src/components/ui/{carousel,chart,sidebar,calendar,drawer,command,input-otp,form,resizable,pagination,menubar,context-menu,navigation-menu,hover-card}.tsx` (deletar os não usados após verificação)
+- `package.json` (remover deps não usadas)
+- `index.html` (Meta Pixel idle, fonts non-blocking, pesos reduzidos)
+- `vite.config.ts` (ajustes finais)
 
-## 2) Open Graph / Cartões ricos
+## O que NÃO muda
+- Layout, cores, tipografia visível, textos, seções, responsividade.
+- Desktop: experiência idêntica (shader continua).
+- Mobile: hero passa a usar fundo dourado CSS estático (visual pouquíssimo distinguível do shader em frame parado).
 
-`index.html` já tem og:image, og:title, og:description, twitter:card. Falta para cobrir bem WhatsApp, Facebook e LinkedIn:
-
-Adicionar em `<head>`:
-- `<meta property="og:url" content="https://qg-lp.lovable.app/">`
-- `<meta property="og:site_name" content="Quinelato Giuseppe">`
-- `<meta property="og:locale" content="pt_BR">`
-- `<meta property="og:image:secure_url" content="...">` (mesma URL https)
-- `<meta property="og:image:type" content="image/webp">`
-- `<meta property="og:image:width" content="1200">`
-- `<meta property="og:image:height" content="630">`
-- `<meta property="og:image:alt" content="Quinelato Giuseppe — Presença digital de excelência">`
-- `<meta name="twitter:site" content="@quinelatogiuseppe">` (placeholder; remover se não houver conta)
-- `<meta name="twitter:image:alt" content="...">`
-- `<link rel="canonical">` já existe.
-
-Observação WhatsApp: prefere imagens < 300KB e proporção próxima a 1.91:1. A imagem atual no GCS já é webp 1200×630-ish — apenas confirmar dimensões nos metadados. Se for maior, substituir pela URL atual está OK; não criamos nova imagem.
-
-Observação LinkedIn: usa `og:title`, `og:description`, `og:image`. Após deploy, recomendar passar pelo Post Inspector da LinkedIn para limpar cache.
-
-## 3) Arquivos afetados
-
-- `index.html` — defer no Pixel, preload de fontes, dns-prefetch, metatags OG completas.
-- `vite.config.ts` — `manualChunks` para `three`, `recharts`, `@radix-ui/*`.
-- `src/components/landing/Hero.tsx` — `lazy(() => import('./ShaderBackground'))` + `<Suspense fallback={<div className="absolute inset-0 bg-background"/>}>`.
-- `src/components/landing/ShaderBackground.tsx` — IntersectionObserver pausa, visibilitychange pausa, FPS cap 30, pixelRatio 1.25, escala mobile.
-- `src/components/landing/CustomCursor.tsx` — early-return no rAF quando mouse parado.
-- `src/index.css` — `content-visibility: auto` em `section[id]:not(#top)`.
-
-Nenhum elemento, copy, cor, fonte, espaçamento ou comportamento visual é alterado. Apenas mecânicas internas de carregamento e renderização.
-
-## 4) Validação após implementação
-
-- Rodar `browser--performance_profile` antes/depois para comparar LCP, TBT e long tasks.
-- Testar OG com:
-  - Facebook Sharing Debugger
-  - LinkedIn Post Inspector
-  - WhatsApp (enviar link a si mesmo após deploy)
-- Confirmar visualmente que a LP está idêntica.
+Aprove para eu aplicar.
